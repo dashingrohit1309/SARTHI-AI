@@ -1,4 +1,4 @@
-# 💧 Jal Saathi: India Groundwater Voice Assistant (Sarvam AI)
+# 💧 Sarthi: India Groundwater Voice Assistant (Sarvam AI)
 
 Ask about India's groundwater **by voice, in any of 22 Indian languages**, and hear the answer spoken back.
 Built entirely on **Sarvam AI** APIs.
@@ -37,12 +37,18 @@ with Google Gemini replaced by Sarvam models.
 ## Setup
 
 1. Python 3.10+.
-2. `pip install -r requirements.txt`
+2. `pip install -r requirements-rag.txt` (full pipeline with semantic search), or `pip install -r requirements.txt` (slim: SQL data only)
 3. Copy `.env.example` to `.env` and set `SARVAM_API_KEY` (from https://dashboard.sarvam.ai).
 4. `python app.py`, then open http://localhost:8000 in Chrome or Edge and allow the microphone.
 
 The first start downloads the `intfloat/e5-large-v2` embedding model (~1.3 GB) and builds the vector index in the background.
 Until it's ready, answers use the SQL data only.
+
+## Deploy on Vercel & install on mobile
+
+- Vercel deploys `app.py` (FastAPI) using the slim `requirements.txt`. The embedding model is too large for Vercel's 250 MB function limit, so the hosted version answers from the SQL data only.
+- Set `SARVAM_API_KEY` in the Vercel project's environment variables.
+- **Install on Android:** open the site in Chrome, then tap **📲 Install app** (or menu → *Install app*). Chrome builds a WebAPK that appears on the home screen like a normal app. On iPhone: Safari → Share → *Add to Home Screen*.
 
 ## Example questions
 

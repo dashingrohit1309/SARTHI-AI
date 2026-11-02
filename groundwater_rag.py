@@ -28,6 +28,7 @@ import json
 import os
 import re
 import sqlite3
+import tempfile
 import threading
 from pathlib import Path
 
@@ -36,7 +37,8 @@ import sarvam_client as sarvam
 DATA_DIR = Path(__file__).parent / "data"
 CSV_PATH = DATA_DIR / "groundwater_state_wise_2020.csv"
 THEORY_PATH = DATA_DIR / "groundwater_theory.txt"
-DB_PATH = DATA_DIR / "groundwater.db"
+# Serverless hosts (Vercel) only allow writing to the temp dir.
+DB_PATH = (Path(tempfile.gettempdir()) if os.getenv("VERCEL") else DATA_DIR) / "groundwater.db"
 CHROMA_DIR = DATA_DIR / "chroma_db"
 
 EMBEDDING_MODEL = "intfloat/e5-large-v2"
@@ -188,8 +190,15 @@ class _Store:
 
 
 def warm_up() -> None:
-    """Call once at server start so the first question isn't slow."""
-    _Store.load()
+    """Call once at server start so the first question isn't slow.
+    If chromadb / sentence-transformers aren't installed (e.g. the slim Vercel build),
+    semantic search is skipped and answers use the SQL data only."""
+    if not DB_PATH.exists():
+        _build_db()
+    try:
+        _Store.load()
+    except ImportError as exc:
+        print(f"[groundwater] semantic search disabled ({exc}); using SQL data only.")
 
 
 # ---------------------------------------------------------------- LLM steps

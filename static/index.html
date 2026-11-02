@@ -3,18 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Jal Saathi · India Groundwater Voice Assistant</title>
+  <title>Sarthi · India Groundwater Voice Assistant</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a84c6" />
+  <link rel="icon" href="/static/icon-192.png" />
+  <link rel="apple-touch-icon" href="/static/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
-      <span class="logo">💧</span>
+      <img class="logo" src="/static/icon-192.png" alt="" />
       <div>
-        <h1>Jal Saathi</h1>
+        <h1>Sarthi</h1>
         <p class="tag">India's groundwater, explained by voice in 22 Indian languages</p>
       </div>
     </div>
+    <button id="installBtn" class="install hidden">📲 Install app</button>
     <label class="lang">
       <span>Language / भाषा</span>
       <select id="language"></select>
@@ -80,7 +86,7 @@
     <section class="card chat">
       <div id="messages">
         <div class="msg bot welcome">
-          <strong>Namaste! 🙏 I'm Jal Saathi.</strong><br />
+          <strong>Namaste! 🙏 I'm Sarthi.</strong><br />
           Ask me about groundwater in any Indian state: whether it is safe, how much is being used,
           or how states compare. Tap the 🎙️ button and just speak, or type below.
         </div>

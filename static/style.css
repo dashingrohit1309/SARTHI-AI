@@ -19,8 +19,7 @@ body { margin: 0; font-family: system-ui, "Noto Sans", "Noto Sans Devanagari", "
 .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
   max-width: 1200px; margin: 0 auto; padding: 18px 20px 6px; }
 .brand { display: flex; align-items: center; gap: 12px; }
-.logo { font-size: 2.2rem; width: 56px; height: 56px; display: grid; place-items: center; border-radius: 16px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: var(--shadow); }
+.logo { width: 56px; height: 56px; border-radius: 16px; box-shadow: var(--shadow); }
 .brand h1 { margin: 0; font-size: 1.6rem; letter-spacing: .2px; }
 .tag { margin: 2px 0 0; color: var(--muted); font-size: .92rem; }
 .lang { display: flex; flex-direction: column; font-size: .8rem; color: var(--muted); min-width: 230px; }
@@ -107,3 +106,5 @@ label { display: block; font-size: .85rem; margin-bottom: 8px; }
   margin: 8px auto; max-width: 1160px; border-radius: 12px; }
 .hidden { display: none !important; }
 footer { text-align: center; padding: 18px; color: var(--muted); font-size: .8rem; }
+
+.install { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; padding: 10px 16px; border-radius: 12px; font-weight: 600; margin-left: auto; }

@@ -1,4 +1,4 @@
-// Jal Saathi front end: voice agent, mic recording (16 kHz WAV), chat, TTS playback, document upload.
+// Sarthi front end: voice agent, mic recording (16 kHz WAV), chat, TTS playback, document upload.
 const $ = (id) => document.getElementById(id);
 let sessionId = null;
 
@@ -93,7 +93,7 @@ new MutationObserver(() => {
 async function sendChat(text, explain = false) {
   if (!text.trim()) return;
   addMsg(text, "user");
-  const thinking = addMsg("Jal Saathi is thinking", "bot thinking");
+  const thinking = addMsg("Sarthi is thinking", "bot thinking");
   try {
     const out = await api("/api/chat", {
       method: "POST",
@@ -296,5 +296,16 @@ async function toWav(blob) {
   samples.forEach((s, i) => v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, s)) * 0x7fff, true));
   return new Blob([v], { type: "audio/wav" });
 }
+
+// ---------------------------------------------------------------- installable app (PWA / Android WebAPK)
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");
+let installEvt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault(); installEvt = e; $("installBtn").classList.remove("hidden");
+});
+$("installBtn").onclick = async () => {
+  if (!installEvt) return;
+  installEvt.prompt(); await installEvt.userChoice; installEvt = null; $("installBtn").classList.add("hidden");
+};
 
 init();

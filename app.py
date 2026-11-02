@@ -62,6 +62,17 @@ async def index():
     return FileResponse(BASE_DIR / "static" / "index.html")
 
 
+# PWA: served from the site root so the service worker controls the whole app.
+@app.get("/manifest.webmanifest")
+async def manifest():
+    return FileResponse(BASE_DIR / "static" / "manifest.webmanifest", media_type="application/manifest+json")
+
+
+@app.get("/sw.js")
+async def service_worker():
+    return FileResponse(BASE_DIR / "static" / "sw.js", media_type="application/javascript")
+
+
 @app.get("/api/config")
 async def config():
     key = os.getenv("SARVAM_API_KEY", "")

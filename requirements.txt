@@ -4,6 +4,3 @@ httpx>=0.27
 python-dotenv>=1.0
 python-multipart>=0.0.9
 pypdf>=4.0
-# Groundwater pipeline (vector search). sentence-transformers pulls in torch.
-chromadb>=1.0
-sentence-transformers>=3.0
