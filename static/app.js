@@ -28,7 +28,11 @@ function addMsg(text, who, speakable = false) {
   if (speakable) {
     const b = document.createElement("button");
     b.className = "speak"; b.textContent = "🔊 Listen";
-    b.onclick = () => speak(text);
+    b.onclick = () => {
+      // Replay: pause the agent's mic so it doesn't hear (and answer) the replay itself.
+      if (agentOn) { agentSession++; agentListening = false; }
+      speak(text, { resumeAgent: true });
+    };
     div.appendChild(document.createElement("br"));
     div.appendChild(b);
   }
@@ -90,8 +94,11 @@ new MutationObserver(() => {
 }).observe($("micStatus"), { childList: true, characterData: true, subtree: true });
 
 // ---------------------------------------------------------------- chat
+let chatSeq = 0; // only the newest question's answer is shown/spoken
 async function sendChat(text, explain = false) {
   if (!text.trim()) return;
+  const mySeq = ++chatSeq;
+  stopAudio(); // a new question silences any answer still playing
   addMsg(text, "user");
   const thinking = addMsg("Sarthi is thinking", "bot thinking");
   try {
@@ -106,6 +113,7 @@ async function sendChat(text, explain = false) {
     sessionId = out.session_id;
     thinking.remove();
     const msg = addMsg(out.reply, "bot", true);
+    const latest = mySeq === chatSeq; // a newer question was asked meanwhile -> don't speak this one
     if (out.map_data && out.map_data.length) {
       // Groundwater answers: show the state-wise figures under the reply (not spoken).
       const list = document.createElement("div");
@@ -122,11 +130,12 @@ async function sendChat(text, explain = false) {
       }
       msg.appendChild(list);
     }
-    if ($("autoSpeak").checked) speak(out.reply);
+    if (latest && $("autoSpeak").checked) await speak(out.reply, { resumeAgent: true });
+    else if (latest) resumeAgent();
   } catch (e) {
     thinking.remove();
     addMsg("⚠️ " + e.message, "bot");
-    if (agentOn) agentListen();
+    if (mySeq === chatSeq) resumeAgent();
   }
 }
 
@@ -138,44 +147,61 @@ $("chatForm").onsubmit = (e) => {
 };
 
 // ---------------------------------------------------------------- text to speech
-let currentAudio = null;
-async function speak(text) {
+// One voice at a time: every speak() call takes a new token; starting a new one (or stopAudio)
+// invalidates older calls, so they never start playing after their audio arrives.
+let currentAudio = null, speakToken = 0, finishClip = null;
+
+function stopAudio() {
+  speakToken++;
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  if (finishClip) { finishClip(); finishClip = null; } // release the waiting playback loop
+}
+
+async function speak(text, { resumeAgent: resume = false } = {}) {
+  stopAudio();
+  const token = speakToken;
   if (!ttsLangs.has($("language").value)) {
     $("micStatus").textContent = "🔇 Voice output is not available for this language yet; showing text.";
-    if (agentOn) setTimeout(agentListen, 300);
+    if (resume) setTimeout(resumeAgent, 300);
     return;
   }
   try {
-    if (currentAudio) currentAudio.pause();
     const out = await api("/api/speak", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, language_code: $("language").value }),
     });
     for (const b64 of out.audios) {
+      if (token !== speakToken) return; // superseded or interrupted: stay silent
       await new Promise((resolve) => {
+        finishClip = resolve;
         currentAudio = new Audio("data:audio/wav;base64," + b64);
         currentAudio.onended = resolve;
         currentAudio.onerror = resolve;
         currentAudio.play().catch(resolve);
       });
-      if (stopSpeaking) break; // user barged in
     }
   } catch (e) {
     $("micStatus").textContent = "🔇 Could not play audio: " + e.message;
   }
-  stopSpeaking = false;
-  if (agentOn) agentListen(); // voice agent: listen again after answering
+  if (token !== speakToken) return;
+  currentAudio = null; finishClip = null;
+  if (resume) resumeAgent(); // voice agent: listen again only after its own answer
 }
 
 // ---------------------------------------------------------------- voice agent (hands-free)
 // Tap 🗣️ once: the agent listens, ends the turn on ~1.2 s of silence, answers aloud,
 // and listens again. Speaking while it talks interrupts it (barge-in).
-let agentOn = false, stopSpeaking = false, agentStream = null;
+let agentOn = false, agentStream = null, agentListening = false, agentSession = 0;
+
+function resumeAgent() { if (agentOn) agentListen(); }
 
 async function agentListen() {
-  if (!agentOn) return;
+  if (!agentOn || agentListening) return; // never run two listeners at once
+  agentListening = true;
+  const session = agentSession;
   agentStream = agentStream || (await navigator.mediaDevices.getUserMedia({ audio: true }));
+  if (!agentOn || session !== agentSession) { agentListening = false; return; }
   const ctx = new AudioContext();
   const analyser = ctx.createAnalyser();
   ctx.createMediaStreamSource(agentStream).connect(analyser);
@@ -186,7 +212,8 @@ async function agentListen() {
   rec.ondataavailable = (e) => parts.push(e.data);
   rec.onstop = async () => {
     ctx.close();
-    if (!agentOn) return;
+    agentListening = false;
+    if (!agentOn || session !== agentSession) return;
     if (!spoke) return agentListen();
     $("micStatus").textContent = "Understanding your voice...";
     try {
@@ -194,9 +221,10 @@ async function agentListen() {
       fd.append("audio", await toWav(new Blob(parts)), "speech.wav");
       fd.append("language_code", "unknown");
       const out = await api("/api/transcribe", { method: "POST", body: fd });
+      if (!agentOn || session !== agentSession) return;
       const sel = $("language");
       if (out.language_code && [...sel.options].some((o) => o.value === out.language_code)) sel.value = out.language_code;
-      if (out.transcript) { $("autoSpeak").checked = true; await sendChat(out.transcript); }
+      if (out.transcript) { $("autoSpeak").checked = true; await sendChat(out.transcript); } // resumes listening after the answer
       else agentListen();
     } catch (e) { $("micStatus").textContent = "⚠️ " + e.message; agentListen(); }
   };
@@ -207,7 +235,7 @@ async function agentListen() {
     analyser.getByteTimeDomainData(buf);
     const level = Math.max(...buf.map((v) => Math.abs(v - 128)));
     if (level > 12) { spoke = true; lastVoice = Date.now(); }
-    if ((spoke && Date.now() - lastVoice > 1200) || Date.now() - started > 25000 || !agentOn) rec.stop();
+    if ((spoke && Date.now() - lastVoice > 1200) || Date.now() - started > 25000 || !agentOn || session !== agentSession) rec.stop();
     else requestAnimationFrame(tick);
   };
   tick();
@@ -220,17 +248,19 @@ setInterval(async () => {
   ctx.createMediaStreamSource(agentStream).connect(an);
   await new Promise((r) => setTimeout(r, 150));
   const b = new Uint8Array(an.fftSize); an.getByteTimeDomainData(b); ctx.close();
-  if (Math.max(...b.map((v) => Math.abs(v - 128))) > 40) { stopSpeaking = true; currentAudio.pause(); currentAudio.onended && currentAudio.onended(); }
+  if (currentAudio && Math.max(...b.map((v) => Math.abs(v - 128))) > 40) { stopAudio(); resumeAgent(); } // user barged in
 }, 400);
 
 $("agentBtn").onclick = async () => {
   agentOn = !agentOn;
+  agentSession++; // ends any listener from a previous on/off cycle
+  agentListening = false;
   $("agentBtn").classList.toggle("recording", agentOn);
   $("agentBtn").querySelector(".orb-icon").textContent = agentOn ? "⏹" : "🎙️";
   $("agentLabel").textContent = agentOn ? "Listening…" : "Tap to talk";
   if (agentOn) agentListen();
   else {
-    if (currentAudio) currentAudio.pause();
+    stopAudio();
     if (agentStream) { agentStream.getTracks().forEach((t) => t.stop()); agentStream = null; }
     $("micStatus").textContent = "";
   }
@@ -241,6 +271,7 @@ let recorder = null, chunks = [];
 
 $("micBtn").onclick = async () => {
   if (recorder && recorder.state === "recording") { recorder.stop(); return; }
+  stopAudio(); // don't record the assistant's own voice
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     chunks = [];

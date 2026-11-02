@@ -1,5 +1,5 @@
 // Sarthi service worker: caches the app shell so it opens instantly; API calls always go to the network.
-const CACHE = "sarthi-v1";
+const CACHE = "sarthi-v2";
 const SHELL = ["/", "/static/style.css", "/static/app.js", "/static/icon-192.png", "/static/icon-512.png", "/manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {
