@@ -108,3 +108,5 @@ label { display: block; font-size: .85rem; margin-bottom: 8px; }
 footer { text-align: center; padding: 18px; color: var(--muted); font-size: .8rem; }
 
 .install { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; padding: 10px 16px; border-radius: 12px; font-weight: 600; margin-left: auto; }
+.chip-group { width: 100%; font-size: .75rem; font-weight: 700; color: var(--muted); margin-top: 4px; }
+.skill { font-size: .72rem; font-weight: 700; color: var(--accent); margin-bottom: 4px; letter-spacing: .2px; }

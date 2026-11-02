@@ -39,8 +39,17 @@ def _headers() -> dict:
 
 
 async def _post(path: str, *, json: dict | None = None, files=None, data=None, timeout=60) -> dict:
-    async with httpx.AsyncClient(base_url=BASE_URL, timeout=timeout) as client:
-        resp = await client.post(path, headers=_headers(), json=json, files=files, data=data)
+    # Retry once on network errors/timeouts (flaky mobile or rural connections); fail with a clear message.
+    for attempt in (1, 2):
+        try:
+            async with httpx.AsyncClient(base_url=BASE_URL, timeout=httpx.Timeout(timeout, connect=15)) as client:
+                resp = await client.post(path, headers=_headers(), json=json, files=files, data=data)
+            break
+        except httpx.TransportError as exc:
+            if attempt == 2:
+                raise SarvamError(
+                    "Could not reach Sarvam AI (network problem or timeout). Please check the internet and try again."
+                ) from exc
     if resp.status_code >= 400:
         raise SarvamError(f"Sarvam {path} failed ({resp.status_code}): {resp.text[:500]}")
     return resp.json()
@@ -108,7 +117,7 @@ async def chat(
     }
     if reasoning_effort:
         body["reasoning_effort"] = reasoning_effort
-    out = await _post("/v1/chat/completions", json=body, timeout=120)
+    out = await _post("/v1/chat/completions", json=body, timeout=60)
     try:
         content = out["choices"][0]["message"]["content"] or ""
     except (KeyError, IndexError) as exc:

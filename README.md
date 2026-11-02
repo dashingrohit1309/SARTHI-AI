@@ -2,9 +2,9 @@
 
 <img src="static/icon-192.png" width="96" alt="Sarthi logo" />
 
-# Sarthi: India Groundwater Voice Assistant
+# Sarthi: Rural Voice Assistant for India
 
-**Ask about India's groundwater by voice, in 22 Indian languages, and hear the answer spoken back.**
+**A voice assistant for rural India. Ask about farming, government schemes, groundwater and documents in 22 Indian languages, and hear the answer spoken back.**
 Built on [Sarvam AI](https://www.sarvam.ai/).
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
@@ -41,20 +41,32 @@ Built on [Sarvam AI](https://www.sarvam.ai/).
 
 ## 1. Overview
 
-Groundwater data for India is published in long technical reports and spreadsheets that most farmers and citizens never see.
-**Sarthi** lets anyone ask a question out loud, in their own language, for example:
+People in rural India often need answers that are hard to find in their own language: what to sow this season,
+how to apply for PM-KISAN or crop insurance, whether the groundwater in their area is running out, or what a government letter means.
+**Sarthi** lets anyone ask out loud, in their own language, and hear a simple answer back:
+
+> 🎤 *"PM-KISAN योजना के लिए आवेदन कैसे करें?"* (How do I apply for the PM-KISAN scheme?)
+>
+> 🔊 *"PM-KISAN योजना के लिए आवेदन करना आसान है। सबसे पहले अपने नज़दीकी CSC centre या ग्राम पंचायत में जाएँ…"* (Applying is easy. First go to your nearest CSC centre or gram panchayat…)
 
 > 🎤 *"महाराष्ट्र में भूजल की स्थिति क्या है?"* (What is the groundwater situation in Maharashtra?)
 >
 > 🔊 *"महाराष्ट्र में भूजल सुरक्षित है। भूजल विकास का स्तर 54.99% है…"* (Maharashtra's groundwater is safe. The stage of development is 54.99%…)
 
-Sarthi turns speech into text, looks up the official Central Ground Water Board (CGWB) figures with an AI-written SQL query,
-searches the CGWB report for background, writes a simple answer in the user's language, and speaks it aloud.
+Each question is **routed automatically** to the right skill:
+
+| Skill | Handles | How it answers |
+|---|---|---|
+| 🌾 **Rural assistant** | Farming and crops, government schemes (PM-KISAN, MGNREGA, PMFBY, KCC, Soil Health Card, PM Awas, Ayushman Bharat, ration/PDS, pensions, scholarships), banking, fraud safety, health basics | Sarvam 105B Conversations with a rural-focused prompt; points to KVK, Kisan Call Centre 1800-180-1551, gram panchayat or a CSC centre when rules vary |
+| 💧 **Groundwater** | Groundwater status, extraction, recharge and availability by state; state comparisons | Official CGWB figures through an AI-written SQL query, plus search over the CGWB report |
+| 📄 **Documents** | Ration card, scholarship form, tax statement, any letter or form | Upload a PDF or text file and ask about it |
 
 ## 2. Features
 
 | | Feature | Details |
 |---|---|---|
+| 🧭 | **Automatic skill routing** | A quick Sarvam call decides whether each question needs groundwater data or general rural help. Answers show which skill responded. |
+| 🌾 | **Rural knowledge** | Farming, seasons, schemes, documents, banking, fraud safety and health basics, with practical next steps and where to go. |
 | 🗣️ | **Hands-free voice agent** | Tap once and talk. It detects when you stop speaking, answers aloud, lets you interrupt it, and listens again. |
 | 🌐 | **22 Indian languages + English** | Speech recognition and answers in all 23. Spoken replies in the 11 languages Bulbul supports; text in the rest. |
 | 🔎 | **Text-to-SQL** | Sarvam 105B writes SQLite queries over CGWB state-wise data: draft, recharge, availability, stage of development. |
@@ -64,7 +76,7 @@ searches the CGWB report for background, writes a simple answer in the user's la
 | 🔊 | **One voice at a time** | New answers, replays and questions cancel older playback, so answers never overlap. |
 | 📲 | **Installable app (PWA)** | Installs on Android as a WebAPK, or on iPhone via "Add to Home Screen". |
 | 🔒 | **Safe SQL** | Generated SQL runs on a read-only connection and only `SELECT` statements are accepted. |
-| 📄 | **Document helper** (secondary) | Upload a PDF or text file (ration card, scholarship form, tax statement) and ask about it. |
+| 📄 | **Document helper** | Upload a PDF or text file (ration card, scholarship form, tax statement, any letter) and ask about it. |
 
 ## 3. How it works
 
@@ -76,7 +88,9 @@ searches the CGWB report for background, writes a simple answer in the user's la
  ┌───────▼───────────────────── FastAPI backend ─────────────┴───────────┐
  │ /api/transcribe ──► Sarvam Saaras v4  (speech → text + language)      │
  │                                                                       │
- │ /api/chat ──► groundwater pipeline (groundwater_rag.py)               │
+ │ /api/chat ──► router (Sarvam 105B Conversations): which skill?        │
+ │      ├─ GENERAL ─► rural assistant (Sarvam 105B Conversations)        │
+ │      └─ GROUNDWATER ─► groundwater pipeline (groundwater_rag.py):     │
  │      1. Sarvam 105B (low reasoning) → English rewrite + SQL query     │
  │      2. e5-large-v2 + Chroma        → top report passages             │
  │      3. SQLite (read-only)          → state-wise 2020 figures         │
@@ -91,7 +105,7 @@ searches the CGWB report for background, writes a simple answer in the user's la
 
 1. The browser records audio, converts it to 16 kHz mono WAV, and posts it to `/api/transcribe`.
 2. **Saaras v4** returns the transcript and the detected language. The UI switches to that language.
-3. `/api/chat` runs the groundwater pipeline (steps 1–4 above) and returns the answer and state figures.
+3. `/api/chat` routes the question: general rural questions are answered directly; groundwater questions run the pipeline (steps 1–4 above) and also return state figures.
 4. `/api/speak` sends the answer to **Bulbul v3** and returns WAV clips, which the browser plays in order.
 5. In voice-agent mode, the browser starts listening again after the answer finishes.
 
@@ -110,10 +124,10 @@ searches the CGWB report for background, writes a simple answer in the user's la
 
 ```
 SARTHI-AI/
-├── app.py                 # FastAPI app: pages, PWA files, all /api routes
+├── app.py                 # FastAPI app: pages, PWA files, /api routes, skill router
 ├── groundwater_rag.py     # Groundwater pipeline: text-to-SQL + vector search + answer
 ├── sarvam_client.py       # Async wrapper for the Sarvam REST APIs
-├── prompts.py             # Languages (22 + English), topics, document prompts
+├── prompts.py             # Languages (22 + English), topics, rural / router / document prompts
 ├── sarvam_hello.py        # Minimal Sarvam SDK check: one chat completion
 ├── data/
 │   ├── groundwater_state_wise_2020.csv   # CGWB state-wise groundwater data (2020)
@@ -144,9 +158,9 @@ The frontend is a single page in `static/`, served by FastAPI. It has no framewo
 |---|---|---|
 | Header | `#language`, `#installBtn` | Pick from 23 languages; install the app when the browser allows it |
 | Voice orb | `#agentBtn`, `#agentLabel`, `#micStatus` | Start/stop the hands-free agent; shows *Listening… / Understanding… / Speaking…* |
-| Try asking | `#chips .chip` | One-tap example questions in English, Hindi and Tamil |
+| Try asking | `#chips .chip` | One-tap examples grouped by Farming, Schemes, Groundwater and Documents (English, Hindi, Tamil) |
 | Legend | `.legend` | Explains the safe / semi-critical / critical / over-exploited colours |
-| Other topics | `#docType`, `#docTools` | Switch to the document helper and upload a PDF or text file |
+| Topic & upload | `#docType`, `#docTools` | Pick a topic (Rural Assistant is the default and routes automatically) and upload a PDF or text file |
 | Chat | `#messages`, `#chatForm`, `#micBtn` | Conversation, typed questions, and a press-to-talk mic |
 
 ### Key behaviour in `static/app.js`
@@ -156,6 +170,7 @@ The frontend is a single page in `static/`, served by FastAPI. It has no framewo
 - **Barge-in:** while an answer is playing, a loud mic level stops playback and the agent listens again.
 - **Single playback:** `speak()` takes a token, so any newer answer, replay, question or mic press cancels older audio, including audio still being fetched. Only the newest question's answer is spoken.
 - **Languages without voice:** for the 12 languages Bulbul doesn't support, the answer is shown as text with a short notice.
+- **Skill badge:** each answer shows which skill responded (🌾 Rural assistant or 💧 Groundwater data).
 - **State cards:** values like `164.42%` are coloured by status (`statusClass()`).
 - **PWA:** registers `/sw.js` and shows **📲 Install app** when the browser fires `beforeinstallprompt`.
 
@@ -170,6 +185,7 @@ The frontend is a single page in `static/`, served by FastAPI. It has no framewo
 - Serves `/`, `/static/*`, `/manifest.webmanifest` and `/sw.js`.
 - Exposes the JSON API (see [API reference](#8-api-reference)).
 - On startup, loads the embedding model and vector index in a background thread, so the server starts immediately.
+- **Routes questions** for the default *Rural Assistant* topic: `_route()` asks Sarvam 105B Conversations to label the question `GROUNDWATER` or `GENERAL`. Groundwater questions go to the pipeline below; everything else is answered with `RURAL_PROMPT`, which includes any uploaded document. If the router call fails, the question is treated as general.
 - Keeps conversation sessions in memory (`SESSIONS`), holding history and any uploaded document.
 - Returns any Sarvam API error as HTTP **502** `{"error": "..."}`.
 
@@ -200,8 +216,8 @@ Async `httpx` functions: `speech_to_text()`, `chat()`, `text_to_speech()` and `t
 ### `prompts.py`
 
 - `LANGUAGES`: 23 entries (`code`, `name`, `native` script name, and `tts` support flag).
-- `DOC_TYPES`: Groundwater (the default) plus the document-helper topics.
-- The system prompts used by the document helper.
+- `DOC_TYPES`: Rural Assistant (the default), Groundwater, and the document-helper topics.
+- `RURAL_PROMPT` (rural assistant), `ROUTER_PROMPT` (skill routing), and the document-helper prompts.
 
 ## 8. API reference
 
@@ -211,7 +227,7 @@ Base URL: `http://localhost:8000` (or your Vercel URL). All request and response
 Languages, topics, and whether the API key is set.
 ```json
 { "languages": [{"code": "hi-IN", "name": "Hindi", "native": "हिन्दी", "tts": true}, ...],
-  "doc_types": ["Groundwater", "Ration Card", "Scholarship Form", "Income Tax Statement", "Other"],
+  "doc_types": ["Rural Assistant", "Groundwater", "Ration Card", "Scholarship Form", "Income Tax Statement", "Other"],
   "key_configured": true }
 ```
 
@@ -226,21 +242,33 @@ Languages, topics, and whether the API key is set.
 ```
 
 ### `POST /api/chat`
-Main chat endpoint. With `doc_type: "Groundwater"` it runs the groundwater pipeline.
+Main chat endpoint.
+
+| `doc_type` | Behaviour |
+|---|---|
+| `Rural Assistant` | Routes automatically: groundwater questions → groundwater pipeline; anything else → rural assistant |
+| `Groundwater` | Always runs the groundwater pipeline |
+| `Ration Card`, `Scholarship Form`, `Income Tax Statement`, `Other` | Document helper (uses the uploaded document) |
+
 ```json
 { "session_id": null, "message": "Which states are over-exploiting groundwater?",
-  "language_code": "en-IN", "doc_type": "Groundwater", "explain": false }
+  "language_code": "en-IN", "doc_type": "Rural Assistant", "explain": false }
 ```
-Response:
+Groundwater response:
 ```json
 { "session_id": "3f9c…",
   "reply": "Five states and union territories are over-exploited: Punjab, Rajasthan, Haryana…",
-  "map_data": [{"Punjab": "164.42%"}, {"Rajasthan": "150.22%"}, {"Haryana": "134.56%"}] }
+  "map_data": [{"Punjab": "164.42%"}, {"Rajasthan": "150.22%"}, {"Haryana": "134.56%"}],
+  "skill": "groundwater" }
+```
+Rural assistant response (for example, *"PM-KISAN योजना के लिए आवेदन कैसे करें?"*):
+```json
+{ "session_id": "3f9c…", "reply": "PM-KISAN योजना के लिए आवेदन करना आसान है…", "skill": "rural" }
 ```
 - `language_code` defaults to `hi-IN`.
 - `doc_type` defaults to `Other`; the web app always sends the selected topic.
 - Reuse the returned `session_id` for follow-up questions.
-- `map_data` is only returned for Groundwater.
+- `skill` (`rural` or `groundwater`) says which skill answered; `map_data` is only returned for groundwater answers.
 
 ### `POST /api/groundwater`
 A standalone groundwater endpoint with the same contract as the original SIH chatbot's `/chat`.
@@ -298,11 +326,11 @@ A standalone groundwater endpoint with the same contract as the original SIH cha
 |---|---|---|---|
 | Speech to Text | `POST /speech-to-text` | `saaras:v4` (`mode: transcribe`) | Voice → text, with the language auto-detected (22 languages + English) |
 | Chat Completions | `POST /v1/chat/completions` | `sarvam-105b` (`reasoning_effort: low`) | Question rewrite and text-to-SQL |
-| Chat Completions | `POST /v1/chat/completions` | `sarvam-105b-conversations` | Final answer in the user's language; document helper |
+| Chat Completions | `POST /v1/chat/completions` | `sarvam-105b-conversations` | Skill routing; rural assistant answers; final groundwater answer; document helper |
 | Text to Speech | `POST /text-to-speech` | `bulbul:v3` (speaker `shubh`) | Spoken answers (11 languages) |
 | Translate | `POST /translate` | `mayura:v1` | `/api/translate` utility |
 
-A typical voice question makes **4 Sarvam calls**: Saaras, then Sarvam 105B, then Sarvam 105B Conversations, then Bulbul.
+A voice question makes **4 Sarvam calls** for a rural question (Saaras, router, answer, Bulbul) or **5** for a groundwater question (Saaras, router, Sarvam 105B for SQL, Sarvam 105B Conversations for the answer, Bulbul).
 
 **Language support**
 
@@ -336,7 +364,7 @@ Copy `.env.example` to `.env`. **Never commit `.env`**; it is listed in `.gitign
 | Variable | Default | Description |
 |---|---|---|
 | `SARVAM_API_KEY` | (required) | Your key from https://dashboard.sarvam.ai |
-| `SARVAM_CHAT_MODEL` | `sarvam-105b-conversations` | Answers and the document helper |
+| `SARVAM_CHAT_MODEL` | `sarvam-105b-conversations` | Routing, rural answers, groundwater answers, document helper |
 | `SARVAM_REASONING_MODEL` | `sarvam-105b` | Text-to-SQL step |
 | `SARVAM_STT_MODEL` | `saaras:v4` | Speech-to-text |
 | `SARVAM_TTS_MODEL` | `bulbul:v3` | Text-to-speech |
@@ -382,6 +410,17 @@ python app.py                         # open http://localhost:8000
 
 ## 14. Example questions
 
+**Rural assistant** (answers come from the Sarvam model's knowledge; check details with official sources):
+
+| Ask | What a good answer covers |
+|---|---|
+| PM-KISAN योजना के लिए आवेदन कैसे करें? (Hindi: "How do I apply for PM-KISAN?") | Apply at a CSC centre, gram panchayat or the PM-KISAN portal; bring Aadhaar, bank passbook and land papers |
+| What should I sow in the rabi season in Maharashtra? | Wheat, gram (chana), mustard and similar rabi crops; check the Soil Health Card |
+| பயிர் காப்பீடு எப்படி பெறுவது? (Tamil: "How do I get crop insurance?") | PMFBY through a CSC centre or bank, with land records, Aadhaar and bank passbook |
+| How do I get a Kisan Credit Card? | Apply at a bank with land records and ID; explains what the card offers |
+
+**Groundwater** (checked against the CGWB 2020 data):
+
 | Ask | Expected answer (2020 data) |
 |---|---|
 | Which states are over-exploiting groundwater? | Punjab 164.42%, Rajasthan 150.22%, Haryana 134.56%, Daman & Diu 113.38%, Delhi 101.4% |
@@ -395,7 +434,8 @@ python app.py                         # open http://localhost:8000
 
 ## 15. Limitations
 
-- **Data age:** state figures are from 2020 and the report text is from 2011. District and block tables in the report are not yet included.
+- **Rural answers:** general guidance from the Sarvam model, not a live database of scheme rules, prices or weather. Amounts and deadlines change, so confirm with official sources.
+- **Data age:** groundwater state figures are from 2020 and the report text is from 2011. District and block tables in the report are not yet included.
 - **Spoken replies:** available in 11 languages (Bulbul v3); the other 12 show text only.
 - **Sessions:** stored in memory and reset on restart. On serverless hosting, a follow-up question may reach a different instance.
 - **Hosted version:** Vercel runs without semantic search (see [Deployment](#13-deployment-and-mobile-install)).

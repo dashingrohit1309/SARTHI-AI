@@ -1,7 +1,7 @@
 {
-  "name": "Sarthi: India Groundwater Voice Assistant",
+  "name": "Sarthi: Rural Voice Assistant",
   "short_name": "Sarthi",
-  "description": "Ask about India's groundwater by voice in 22 Indian languages. Powered by Sarvam AI.",
+  "description": "Voice assistant for rural India: farming, government schemes, groundwater and documents, in 22 Indian languages. Powered by Sarvam AI.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

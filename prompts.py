@@ -29,8 +29,14 @@ LANGUAGES = [
 ]
 
 DOC_TYPES = {
+    # Default: routes each question to the right skill (groundwater data, or general rural help).
+    "Rural Assistant": (
+        "Everyday rural life in India: farming and crops, soil and water, weather and seasons, livestock, "
+        "government schemes (PM-KISAN, MGNREGA, PMFBY crop insurance, Kisan Credit Card, Soil Health Card, "
+        "PM Awas Yojana, Ayushman Bharat, ration / PDS, pensions, scholarships), documents, banking and health basics."
+    ),
     # Handled by groundwater_rag.py (vector search + text-to-SQL over CGWB data), not by an uploaded document.
-    "Groundwater": "India groundwater resources: state-wise draft, recharge, availability and stage of development (CGWB).",
+    "Groundwater":"India groundwater resources: state-wise draft, recharge, availability and stage of development (CGWB).",
     "Ration Card": (
         "Ration cards (NFSA / PDS): card categories like AAY, PHH/BPL, APL; family members list; "
         "monthly entitlement of rice, wheat, sugar, kerosene; Fair Price Shop; e-KYC and Aadhaar seeding; "
@@ -54,6 +60,31 @@ DOC_TYPES = {
 }
 
 GROUNDWATER = "Groundwater"
+RURAL = "Rural Assistant"
+
+RURAL_PROMPT = """You are "Sarthi", a friendly voice assistant for people in rural India: farmers, labourers,
+women's self-help groups, students and elders. Many users have little formal education, and your answer will be read aloud.
+
+You help with:
+- Farming: crops and seasons (kharif / rabi / zaid), sowing, seeds, fertiliser and pest basics, irrigation and saving water, soil health, livestock.
+- Government schemes: PM-KISAN, MGNREGA, PMFBY crop insurance, Kisan Credit Card, Soil Health Card, PM Awas Yojana,
+  Ayushman Bharat, ration / PDS, old-age and widow pensions, scholarships: who is eligible, what documents are needed, and where to apply.
+- Documents, banking, digital payments and safety from fraud; basic health and nutrition advice.
+
+Rules:
+- ALWAYS reply in {language}, in that language's own script, using simple everyday words. Keep scheme names as they are.
+- Short sentences, at most about 120 words, with practical next steps.
+- Never invent amounts, dates or deadlines. If unsure or if rules vary by state, say so and point to the right place:
+  Krishi Vigyan Kendra (KVK), Kisan Call Centre 1800-180-1551, gram panchayat, CSC centre, the bank, or the official portal.
+- For medical emergencies, tell them to call 108 or go to the nearest health centre.
+- Never ask for or repeat Aadhaar numbers, bank account numbers, passwords or OTPs; warn never to share an OTP.
+"""
+
+ROUTER_PROMPT = """Classify the user's latest message. Reply with exactly one word:
+GROUNDWATER - it asks about groundwater levels, extraction, recharge, availability, or whether groundwater in a
+  state / district is safe, critical or over-exploited, or compares states on groundwater.
+GENERAL - anything else (farming, crops, schemes, documents, health, weather, greetings, ...).
+The message may be in any Indian language."""
 
 SYSTEM_PROMPT = """You are "Saathi", a patient, friendly helper for ordinary people in India who find official documents confusing.
 Many users have little formal education and may be first-time applicants.

@@ -1,6 +1,6 @@
-"""Sarvam Saathi: a voice-first assistant that explains government and financial
-documents (ration card, scholarship forms, income-tax statements, ...) to
-ordinary people in their own Indian language.
+"""Sarthi: a voice-first rural assistant for India (farming, government schemes, groundwater,
+documents and more), answering in the user's own Indian language. Built on Sarvam AI.
+
 
 Run:  uvicorn app:app --reload   (then open http://localhost:8000)
 """
@@ -24,12 +24,14 @@ from pypdf import PdfReader  # noqa: E402
 
 import groundwater_rag  # noqa: E402
 import sarvam_client as sarvam  # noqa: E402
-from prompts import LANGUAGES, SYSTEM_PROMPT, EXPLAIN_PROMPT, DOC_TYPES, GROUNDWATER  # noqa: E402
+from prompts import (  # noqa: E402
+    DOC_TYPES, EXPLAIN_PROMPT, GROUNDWATER, LANGUAGES, ROUTER_PROMPT, RURAL, RURAL_PROMPT, SYSTEM_PROMPT,
+)
 
 BASE_DIR = Path(__file__).parent
 MAX_DOC_CHARS = 12000  # how much document text we send to the LLM
 
-app = FastAPI(title="Sarvam Saathi")
+app = FastAPI(title="Sarthi Rural Assistant")
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 
 
@@ -138,12 +140,42 @@ def _language_name(code: str) -> str:
     return next((l["name"] for l in LANGUAGES if l["code"] == code), "Hindi")
 
 
+async def _route(message: str, history: list[dict]) -> str:
+    """Rural Assistant: send groundwater questions to the data pipeline, everything else to general rural help."""
+    try:
+        label = await sarvam.chat(
+            [{"role": "system", "content": ROUTER_PROMPT}] + history[-2:] + [{"role": "user", "content": message}],
+            temperature=0,
+            max_tokens=5,
+        )
+    except sarvam.SarvamError:
+        return RURAL
+    return GROUNDWATER if "GROUNDWATER" in label.upper() else RURAL
+
+
 @app.post("/api/chat")
 async def chat(body: ChatIn):
     sid, sess = _session(body.session_id)
     lang_name = _language_name(body.language_code)
 
-    if body.doc_type == GROUNDWATER:
+    route = body.doc_type
+    if route == RURAL and not body.explain:
+        route = await _route(body.message, sess["history"])
+
+    if route == RURAL:  # general rural help (farming, schemes, documents, health, ...)
+        question = body.message.strip()
+        if not question:
+            raise HTTPException(400, "Empty message.")
+        system = RURAL_PROMPT.format(language=lang_name)
+        if sess["doc_text"]:
+            system += f"\n\nThe user has shared a document ({sess['doc_name']}):\n\"\"\"\n{sess['doc_text'][:MAX_DOC_CHARS]}\n\"\"\""
+        reply = await sarvam.chat(
+            [{"role": "system", "content": system}] + sess["history"][-8:] + [{"role": "user", "content": question}]
+        )
+        sess["history"] += [{"role": "user", "content": question}, {"role": "assistant", "content": reply}]
+        return {"session_id": sid, "reply": reply, "skill": "rural"}
+
+    if route == GROUNDWATER:
         question = body.message.strip()
         if body.explain or not question:
             question = "Give me a short overview of India's groundwater situation."
@@ -152,7 +184,7 @@ async def chat(body: ChatIn):
             {"role": "user", "content": question},
             {"role": "assistant", "content": out["summary"]},
         ]
-        return {"session_id": sid, "reply": out["summary"], "map_data": out["map_data"]}
+        return {"session_id": sid, "reply": out["summary"], "map_data": out["map_data"], "skill": "groundwater"}
 
     system = SYSTEM_PROMPT.format(
         language=lang_name,

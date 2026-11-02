@@ -1,4 +1,4 @@
-// Sarthi front end: voice agent, mic recording (16 kHz WAV), chat, TTS playback, document upload.
+// Sarthi front end: rural voice assistant (voice agent, recording, chat, TTS playback, documents, PWA).
 const $ = (id) => document.getElementById(id);
 let sessionId = null;
 
@@ -63,12 +63,14 @@ $("explainBtn").onclick = () => sendChat("📄 Explain my document", true);
 
 // Groundwater mode answers from built-in CGWB data, so no document is needed.
 $("docType").onchange = () => {
-  const gw = $("docType").value === "Groundwater";
-  $("textInput").placeholder = gw
-    ? "Ask about groundwater, e.g. Which states are over-exploited?"
-    : "Ask about your document…";
-  $("docTools").classList.toggle("hidden", gw);
-  $("docStatus").textContent = gw ? "💧 Groundwater uses built-in CGWB data. No upload needed." : "";
+  const topic = $("docType").value;
+  const gw = topic === "Groundwater";
+  $("textInput").placeholder = topic === "Rural Assistant"
+    ? "Ask about crops, schemes, water or documents…"
+    : gw ? "Ask about groundwater, e.g. Which states are over-exploited?" : "Ask about your document…";
+  $("docTools").classList.toggle("hidden", gw); // groundwater uses built-in data
+  $("docStatus").textContent = gw ? "💧 Groundwater uses built-in CGWB data. No upload needed."
+    : topic === "Rural Assistant" ? "Optional: upload a form or letter and Sarthi will explain it." : "";
 };
 
 // Colour a figure by groundwater status when it is a stage-of-development percentage.
@@ -81,7 +83,7 @@ function statusClass(value) {
 
 // Suggested questions
 document.querySelectorAll("#chips .chip").forEach((c) => {
-  c.onclick = () => { $("docType").value = "Groundwater"; $("docType").onchange(); sendChat(c.textContent); };
+  c.onclick = () => { $("docType").value = "Rural Assistant"; $("docType").onchange(); sendChat(c.textContent); };
 });
 
 // Voice-agent label follows the status line (listening / understanding / speaking).
@@ -114,6 +116,12 @@ async function sendChat(text, explain = false) {
     thinking.remove();
     const msg = addMsg(out.reply, "bot", true);
     const latest = mySeq === chatSeq; // a newer question was asked meanwhile -> don't speak this one
+    if (out.skill) { // which skill answered (Rural Assistant routes automatically)
+      const tag = document.createElement("div");
+      tag.className = "skill";
+      tag.textContent = out.skill === "groundwater" ? "💧 Groundwater data (CGWB)" : "🌾 Rural assistant";
+      msg.prepend(tag);
+    }
     if (out.map_data && out.map_data.length) {
       // Groundwater answers: show the state-wise figures under the reply (not spoken).
       const list = document.createElement("div");

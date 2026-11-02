@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sarthi · India Groundwater Voice Assistant</title>
+  <title>Sarthi · Rural Voice Assistant for India</title>
+  <meta name="description" content="Voice assistant for rural India: farming, government schemes, groundwater and documents, in 22 Indian languages. Powered by Sarvam AI." />
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#0a84c6" />
   <link rel="icon" href="/static/icon-192.png" />
@@ -17,7 +18,7 @@
       <img class="logo" src="/static/icon-192.png" alt="" />
       <div>
         <h1>Sarthi</h1>
-        <p class="tag">India's groundwater, explained by voice in 22 Indian languages</p>
+        <p class="tag">Rural voice assistant: farming, schemes, water &amp; documents, in 22 Indian languages</p>
       </div>
     </div>
     <button id="installBtn" class="install hidden">📲 Install app</button>
@@ -40,24 +41,30 @@
           <span class="orb-icon">🎙️</span>
         </button>
         <div class="agent-label" id="agentLabel">Tap to talk</div>
-        <div id="micStatus" class="status">Ask anything about groundwater. Speak naturally in your language.</div>
+        <div id="micStatus" class="status">Ask about farming, schemes, water or documents. Speak naturally in your language.</div>
         <label class="check"><input type="checkbox" id="autoSpeak" checked /> Read answers aloud</label>
       </section>
 
       <section class="card">
         <h2>Try asking</h2>
         <div class="chips" id="chips">
+          <span class="chip-group">🌾 Farming</span>
+          <button class="chip">What should I sow in the rabi season?</button>
+          <button class="chip">गेहूं में कीड़े लगें तो क्या करें?</button>
+          <span class="chip-group">🏛️ Schemes</span>
+          <button class="chip">PM-KISAN योजना के लिए आवेदन कैसे करें?</button>
+          <button class="chip">பயிர் காப்பீடு எப்படி பெறுவது?</button>
+          <button class="chip">How do I get a Kisan Credit Card?</button>
+          <span class="chip-group">💧 Groundwater</span>
           <button class="chip">Which states are over-exploiting groundwater?</button>
           <button class="chip">महाराष्ट्र में भूजल की स्थिति क्या है?</button>
-          <button class="chip">Compare Maharashtra and Karnataka</button>
-          <button class="chip">Which state has the most groundwater recharge?</button>
-          <button class="chip">தமிழ்நாட்டில் நிலத்தடி நீர் நிலை என்ன?</button>
-          <button class="chip">How many states are in the safe category?</button>
+          <span class="chip-group">📄 Documents</span>
+          <button class="chip">How do I add a member to my ration card?</button>
         </div>
       </section>
 
       <section class="card legend">
-        <h2>Stage of groundwater development</h2>
+        <h2>💧 Groundwater status colours</h2>
         <ul>
           <li><span class="dot safe"></span>Safe <em>below 70%</em></li>
           <li><span class="dot semi"></span>Semi-critical <em>70–90%</em></li>
@@ -68,7 +75,7 @@
       </section>
 
       <details class="card more">
-        <summary>Other topics &amp; documents</summary>
+        <summary>📄 Topic &amp; upload a document</summary>
         <label>Topic
           <select id="docType"></select>
         </label>
@@ -86,9 +93,10 @@
     <section class="card chat">
       <div id="messages">
         <div class="msg bot welcome">
-          <strong>Namaste! 🙏 I'm Sarthi.</strong><br />
-          Ask me about groundwater in any Indian state: whether it is safe, how much is being used,
-          or how states compare. Tap the 🎙️ button and just speak, or type below.
+          <strong>Namaste! 🙏 I'm Sarthi, your village helper.</strong><br />
+          Ask me about 🌾 crops and farming, 🏛️ government schemes like PM-KISAN or crop insurance,
+          💧 groundwater in your state, or 📄 any document you don't understand.
+          Tap the 🎙️ button and just speak in your language, or type below.
         </div>
       </div>
       <form id="chatForm">
@@ -101,7 +109,7 @@
 
   <footer>
     Powered by <strong>Sarvam AI</strong>: Saaras (speech-to-text) · Sarvam 105B (reasoning &amp; answers) · Bulbul (voice).
-    General information only. Check with CGWB or your state groundwater department.
+    General guidance only. Confirm with your gram panchayat, KVK, CSC centre or the official portal. Never share OTPs.
   </footer>
   <script src="/static/app.js"></script>
 </body>
