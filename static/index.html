@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jal Saathi · India Groundwater Voice Assistant</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">💧</span>
+      <div>
+        <h1>Jal Saathi</h1>
+        <p class="tag">India's groundwater, explained by voice in 22 Indian languages</p>
+      </div>
+    </div>
+    <label class="lang">
+      <span>Language / भाषा</span>
+      <select id="language"></select>
+    </label>
+  </header>
+
+  <div id="keyWarning" class="warning hidden">
+    Your Sarvam API key is not set. Open the <code>.env</code> file, paste your key after
+    <code>SARVAM_API_KEY=</code>, and restart the server.
+  </div>
+
+  <main>
+    <!-- Left: voice agent + guidance -->
+    <aside class="side">
+      <section class="card agent">
+        <button type="button" id="agentBtn" class="orb" aria-label="Start voice agent">
+          <span class="orb-icon">🎙️</span>
+        </button>
+        <div class="agent-label" id="agentLabel">Tap to talk</div>
+        <div id="micStatus" class="status">Ask anything about groundwater. Speak naturally in your language.</div>
+        <label class="check"><input type="checkbox" id="autoSpeak" checked /> Read answers aloud</label>
+      </section>
+
+      <section class="card">
+        <h2>Try asking</h2>
+        <div class="chips" id="chips">
+          <button class="chip">Which states are over-exploiting groundwater?</button>
+          <button class="chip">महाराष्ट्र में भूजल की स्थिति क्या है?</button>
+          <button class="chip">Compare Maharashtra and Karnataka</button>
+          <button class="chip">Which state has the most groundwater recharge?</button>
+          <button class="chip">தமிழ்நாட்டில் நிலத்தடி நீர் நிலை என்ன?</button>
+          <button class="chip">How many states are in the safe category?</button>
+        </div>
+      </section>
+
+      <section class="card legend">
+        <h2>Stage of groundwater development</h2>
+        <ul>
+          <li><span class="dot safe"></span>Safe <em>below 70%</em></li>
+          <li><span class="dot semi"></span>Semi-critical <em>70–90%</em></li>
+          <li><span class="dot critical"></span>Critical <em>90–100%</em></li>
+          <li><span class="dot over"></span>Over-exploited <em>above 100%</em></li>
+        </ul>
+        <p class="muted">Share of available groundwater being extracted. Data: CGWB, state-wise 2020.</p>
+      </section>
+
+      <details class="card more">
+        <summary>Other topics &amp; documents</summary>
+        <label>Topic
+          <select id="docType"></select>
+        </label>
+        <div id="docTools">
+          <input type="file" id="fileInput" accept=".pdf,.txt" />
+          <textarea id="pasteText" rows="3" placeholder="…or paste text from a form"></textarea>
+          <button id="uploadBtn" class="ghost">Use this document</button>
+          <button id="explainBtn" class="ghost" disabled>📄 Explain my document</button>
+        </div>
+        <div id="docStatus" class="muted"></div>
+      </details>
+    </aside>
+
+    <!-- Right: conversation -->
+    <section class="card chat">
+      <div id="messages">
+        <div class="msg bot welcome">
+          <strong>Namaste! 🙏 I'm Jal Saathi.</strong><br />
+          Ask me about groundwater in any Indian state: whether it is safe, how much is being used,
+          or how states compare. Tap the 🎙️ button and just speak, or type below.
+        </div>
+      </div>
+      <form id="chatForm">
+        <button type="button" id="micBtn" title="Hold a single question">🎤</button>
+        <input id="textInput" placeholder="Type your question…" autocomplete="off" />
+        <button type="submit" class="send">Ask</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    Powered by <strong>Sarvam AI</strong>: Saaras (speech-to-text) · Sarvam 105B (reasoning &amp; answers) · Bulbul (voice).
+    General information only. Check with CGWB or your state groundwater department.
+  </footer>
+  <script src="/static/app.js"></script>
+</body>
+</html>
