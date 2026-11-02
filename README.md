@@ -2,9 +2,9 @@
 
 <img src="static/icon-192.png" width="96" alt="Sarthi logo" />
 
-# Sarthi: Rural Voice Assistant for India
+# Sarthi: Rural Voice Assistant
 
-**A voice assistant for rural India. Ask about farming, government schemes, groundwater and documents in 22 Indian languages, and hear the answer spoken back.**
+**Ask about any government sourced information by voice, in 22 Indian languages, and hear the answer spoken back.**
 Built on [Sarvam AI](https://www.sarvam.ai/).
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
@@ -452,4 +452,4 @@ python app.py                         # open http://localhost:8000
 
 This project is licensed under the **MIT License**. See [`LICENSE`](LICENSE) for the full text.
 
-Copyright © 2026 **[dashingrohit1309](https://github.com/dashingrohit1309)**, owner of the [SARTHI-AI](https://github.com/dashingrohit1309/SARTHI-AI) repository.
+Copyright © 2026 **[dashingrohit1309](https://github.com/dashingrohit1309)** and **[vedantmade](https://github.com/vedantmade)**, owners of the [SARTHI-AI](https://github.com/dashingrohit1309/SARTHI-AI) repository.
