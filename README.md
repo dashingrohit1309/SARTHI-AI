@@ -2,9 +2,9 @@
 
 <img src="static/icon-192.png" width="96" alt="Sarthi logo" />
 
-# Sarthi: India Groundwater Voice Assistant
+# Sarthi: Rural Voice Assistant
 
-**Ask about India's groundwater by voice, in 22 Indian languages, and hear the answer spoken back.**
+**Ask about any government sourced information by voice, in 22 Indian languages, and hear the answer spoken back.**
 Built on [Sarvam AI](https://www.sarvam.ai/).
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
