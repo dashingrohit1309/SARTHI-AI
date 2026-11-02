@@ -412,4 +412,4 @@ python app.py                         # open http://localhost:8000
 
 This project is licensed under the **MIT License**. See [`LICENSE`](LICENSE) for the full text.
 
-Copyright © 2026 **[dashingrohit1309](https://github.com/dashingrohit1309)**, owner of the [SARTHI-AI](https://github.com/dashingrohit1309/SARTHI-AI) repository.
+Copyright © 2026 **[dashingrohit1309](https://github.com/dashingrohit1309)**and**[vedantmade](https://github.com/vedantmade)**, owner of the [SARTHI-AI](https://github.com/dashingrohit1309/SARTHI-AI) repository.
